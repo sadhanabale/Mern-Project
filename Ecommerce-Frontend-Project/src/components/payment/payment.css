@@ -1,0 +1,73 @@
+/* src/Payment/Payment.css */
+.payment-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    text-align: center;
+}
+
+.payment-container h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+.payment-info {
+    margin-bottom: 20px;
+}
+
+.payment-info h2 {
+    font-size: 20px;
+    color: #afaa4c;
+}
+
+.card-details {
+    margin-top: 10px;
+    text-align: left;
+}
+
+.card-details h3 {
+    font-size: 18px;
+    color: #555;
+}
+
+.card-details input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.expiry-cvc {
+    display: flex;
+    justify-content: space-between;
+}
+
+.expiry,
+.cvc {
+    width: 48%;
+}
+
+.pay-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.pay-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.pay-button:hover:not(:disabled) {
+    background-color: #ecfc8d;
+}

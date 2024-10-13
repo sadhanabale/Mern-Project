@@ -1,12 +1,12 @@
 // src/pages/checkout/Checkout.js
 import { useCart } from "../../context/cart/useCart";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import './checkout.css';
 
 const Checkout = () => {
     const { cart } = useCart();
-    const navigate = useNavigate(); // Initialize useNavigate
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         name: '',

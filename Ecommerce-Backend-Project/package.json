@@ -16,14 +16,14 @@
     "ext": "js, json"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.7"
   },
   "dependencies": {
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.5.0",
-    "mongoose": "^8.3.2"
+    "mongodb": "^6.10.0",
+    "mongoose": "^8.8.2"
   }
 }

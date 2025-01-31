@@ -1,4 +1,4 @@
-const ProductModel = require('../models/productModel');
+const productModel = require('../models/productModel');
 
 const {
     createFactory,
@@ -59,23 +59,23 @@ const getProductHandler = async(req, res) => {
 
         //1. Basic filtering - > can be done in find() or findByID() methods based params
 
-        //let queryResponsePromise = ProductModel.find({name: "Camera"});
+        //let queryResponsePromise = productModel.find({name: "Camera"});
 
 
         //2. using query params and can also mongodb operators
 
-        //let queryResponsePromise = ProductModel.find({price: {$lt: 60}});
+        //let queryResponsePromise = productModel.find({price: {$lt: 60}});
 
         // 3. purely via mongoose methods
-        //let queryResponsePromise = ProductModel.find().where('price').gt(60);
+        //let queryResponsePromise = productModel.find().where('price').gt(60);
 
         let queryResponsePromise = null;
 
         if(filterParams) {
             const filterObj = transfomedQueryHelper(filterParams)
-            queryResponsePromise = ProductModel.find(filterObj);
+            queryResponsePromise = productModel.find(filterObj);
         } else {
-            queryResponsePromise = ProductModel.find();
+            queryResponsePromise = productModel.find();
         }
 
         
@@ -83,11 +83,12 @@ const getProductHandler = async(req, res) => {
         // Sorting
         if(sortParams) {
             const [sortParam, order] = sortParams.split(" ");
-
+            console.log(`Sorting by ${sortParam} in ${order} order`);
             if(order === 'asc'){
                 queryResponsePromise = queryResponsePromise.sort(sortParam);
             } else{
-                queryResponsePromise = queryResponsePromise.sort(`-${sortParam}`);
+                queryResponsePromise = queryResponsePromise.sort({ [sortParam]: order === 'asc' ? 1 : -1 });
+
             }
         }
 
@@ -127,11 +128,11 @@ const getProductCategories = (req, res) => {
     });
 }
 
-const createProduct = createFactory(ProductModel);
-const getProducts = getAllFactory(ProductModel);
-const getProductById = getByIdFactory(ProductModel);
-const updateProduct = updateByIdFactory(ProductModel);
-const deleteProduct = deleteByIdFactory(ProductModel);
+const createProduct = createFactory(productModel);
+const getProducts = getAllFactory(productModel);
+const getProductById = getByIdFactory(productModel);
+const updateProduct = updateByIdFactory(productModel);
+const deleteProduct = deleteByIdFactory(productModel);
 
 module.exports = {
     createProduct,

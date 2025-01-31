@@ -27,6 +27,24 @@ app.use(express.json());
 app.use('/api/users',userRoutes);
 app.use('/api/products',productRoutes);
 
+app.use('/search',(req,res)=>{
+    console.log(req.query);
+    res.status(200).json({
+        message:"search successful",
+        data:req.query
+    })
+});
+
+app.use((err,res,)=> {
+    const statusCode = err.statusCode || 500;
+    const message = err.message || "Internal server error";
+
+    res.status(statusCode).json({
+        status:statusCode,
+        message: message
+    });
+    });
+
 const port = 3000;
 
 app.listen(port, ()=>{

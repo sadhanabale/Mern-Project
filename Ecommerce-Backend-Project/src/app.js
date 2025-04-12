@@ -71,6 +71,7 @@ const signUpController = async(req, res,next) => {
     const payload = {user:"sadhana venkatesh"};
 
     const loginController = async(req,res,next)=>{
+        console.log("loginController called");
         const {email,password} = req.body;
 
         const user = await UserModel.findOne({email});
@@ -98,7 +99,7 @@ const signUpController = async(req, res,next) => {
                                 return res.status(500).json({ message: "Error generating token" });
                             }
 
-                            console.log(token);
+                            console.log("token",token);
 
                             res.cookie("jwt", token, {
                                 maxAge: 30 * 60 * 1000,
@@ -121,6 +122,13 @@ const signUpController = async(req, res,next) => {
 
         }
     }
+
+    app.get('/logout',(req,res)=>{
+        res.clearCookie('token');
+        res.status(200).json({
+            message:"user logged out successfully"
+        })
+    });
 
     const protectRouteMiddleware = (req, res, next) => {
         console.log("protectRouteMiddleware called");
@@ -184,7 +192,8 @@ const signUpController = async(req, res,next) => {
             }
 
             const otp = otpGenerator();
-            console.log(otp);
+            console.log("Generated OTP:", otp);
+
 
             await sendEmailHelper(otp, user.name,email);
 
@@ -205,14 +214,111 @@ const signUpController = async(req, res,next) => {
         }
     }
 
-    // const resetPassword =async(req,res,next)=>{
+    const resetPassword = async (req, res, next) => {
+        try {
+          const userId = req.params.userId;
+          const { otp, password, confirmPassword } = req.body;
+      
+          const user = await UserModel.findById(userId);
+          if (!user) {
+            return res.status(404).json({
+              status: "failure",
+              message: "User not found",
+            });
+          }
 
-    // }
+          console.log("user",user);
+      
+          console.log("DB OTP:", user.otp);
+          console.log("Received OTP:", otp);
+      
+          if (!otp || otp !== user.otp) {
+            return res.status(400).json({
+              status: "failure",
+              message: "Invalid OTP",
+            });
+          }
+      
+          const currentTime = Date.now();
+          if (currentTime > user.otpExpiry) {
+            return res.status(400).json({
+              status: "failure",
+              message: "OTP expired",
+            });
+          }
+      
+          user.password = password;
+          user.confirmPassword = confirmPassword;
+          user.otp = undefined;
+          user.otpExpiry = undefined;
+      
+          await user.save();
+      
+          return res.status(200).json({
+            status: "success",
+            message: "Password has been updated successfully",
+          });
+        } catch (error) {
+          next(error);
+        }
+      };
+
+      const isAdminMiddleware = (req,res,next)=>{
+            try{
+
+            }catch(error){
+
+            }
+      }
+
+      const validUsers = ["user","admin","seller"];
+
+      const isAuthorizedMiddleware = (allowedUser)=>{
+
+        console.log("allowedUser",allowedUser);
+        return async(req,res,next)=>{
+            try{
+
+                let id = req.userId;
+
+                const user = await UserModel.findById(id);
+
+                console.log("user role",user.role);
+
+                const isAuthorized = allowedUser.includes(user.role);
+
+                if(isAuthorized){
+                    next();
+                }else{
+                    res.status(401).json({
+                        status:"failure",
+                        message:"You are not authorized user"
+                    });
+                }
+
+            }catch(error){
+                next(error);
+            }
+        }
+  }
+
+      const getAllUsers = async(req, res) => {
+        try {
+            const users = await UserModel.find();
+            res.status(200).json(users);
+        } catch (error) {
+             res.status(500).json({message: 'Internal Server Error'});
+        }
+    }
+      
+    
+
     app.post("/login",loginController);
     app.post("/signup", signUpController);
     app.get("/getUser", protectRouteMiddleware, getUserProfile);
     app.patch("/forgotPassword", forgotPassword);
-    // app.patch("/resetPassword", resetPassword);
+    app.patch("/resetPassword/:userId", resetPassword);
+    app.get("/getAllUsers",protectRouteMiddleware,isAuthorizedMiddleware(['admin']), getAllUsers);
     
 app.use((err,res)=> {
     const statusCode = err.statusCode || 500;

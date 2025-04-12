@@ -30,6 +30,19 @@ const userSchemaObj = {
     createdAt: {
         type: Date,
         default: Date.now()
+    },
+
+    otp:{
+        type: String
+    },
+
+    otpExpiry:{
+        type:Date
+    },
+
+    role:{
+        type:String,
+        default:"user"
     }
 
 };

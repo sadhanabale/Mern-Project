@@ -5,6 +5,8 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 
 const jwt = require('jsonwebtoken');
+const Razorpay = require('razorpay');
+const shortid = require('shortid');
 
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require ('./routes/productRoutes');
@@ -16,13 +18,13 @@ const sendEmailHelper = require('./email/dynamicEmailSender');
 
 const SECRET_KEY = "ABCD0987";
 
-// const dotenv = require('dotenv');
+const dotenv = require('dotenv');
 
-// dotenv.config();
+dotenv.config();
 
-// const {PORT, DB_USER, DB_PASSWORD} = process.env;
+const {PRIVATE_KEY,PUBLIC_KEY} = process.env;
 
-console.log(SECRET_KEY);
+// console.log(SECRET_KEY);
 
 const DB_USER = "ashwin_db";
 const DB_PASSWORD = "ygli3axrxF8nvC0G";
@@ -311,7 +313,46 @@ const signUpController = async(req, res,next) => {
         }
     }
       
-    
+    const checkoutController = (req, res) => {
+        try {
+          let razorpayInstance = new Razorpay({
+            key_id: PUBLIC_KEY,
+            key_secret: PRIVATE_KEY
+          });
+      
+          let options = {
+            amount: 50000,
+            currency: "INR",
+            receipt: shortid.generate(),
+            payment_capture: 1
+          };
+      
+          razorpayInstance.orders.create(options, function (err, order) {
+            if (err) {
+              console.error("Error creating Razorpay order:", err);
+              return res.status(500).json({
+                status: "failure",
+                message: "Error creating Razorpay order"
+              });
+            }
+      
+            console.log("Created order:", order);
+      
+            return res.status(200).json({
+              status: "success",
+              message: "Order created successfully",
+              order: order
+            });
+          });
+      
+        } catch (error) {
+          console.error("Exception in checkoutController:", error);
+          res.status(500).json({
+            status: "failure",
+            message: "Internal server error"
+          });
+        }
+      }
 
     app.post("/login",loginController);
     app.post("/signup", signUpController);
@@ -319,8 +360,9 @@ const signUpController = async(req, res,next) => {
     app.patch("/forgotPassword", forgotPassword);
     app.patch("/resetPassword/:userId", resetPassword);
     app.get("/getAllUsers",protectRouteMiddleware,isAuthorizedMiddleware(['admin']), getAllUsers);
-    
-app.use((err,res)=> {
+    app.post('/checkout', checkoutController)
+
+    app.use((err,res)=> {
     const statusCode = err.statusCode || 500;
     const message = err.message || "Internal server error";
 
@@ -329,6 +371,7 @@ app.use((err,res)=> {
         message: message
     });
     });
+   
 const port = 3000;
 
 app.listen(port, ()=>{

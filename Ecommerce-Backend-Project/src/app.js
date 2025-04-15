@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
 const shortid = require('shortid');
+const crypto = require('crypto');
 
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require ('./routes/productRoutes');
@@ -22,7 +23,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const {PRIVATE_KEY,PUBLIC_KEY} = process.env;
+const {PRIVATE_KEY,PUBLIC_KEY,WEBHOOK_SECRET} = process.env;
 
 // console.log(SECRET_KEY);
 
@@ -354,6 +355,46 @@ const signUpController = async(req, res,next) => {
         }
       }
 
+
+      const paymentVerificationController = (req,res,next) =>{
+        try{
+            if(!WEBHOOK_SECRET){
+                throw new Error("webhook secret key is not defined")
+            }
+
+            const { body,headers} = req;
+
+            console.log(body);
+            console.log(headers);
+
+            const freshSignature = crypto.createHmac('sha256',WEBHOOK_SECRET).update(JSON.stringify(body)).digest('hex');
+            console.log(freshSignature);
+            
+
+            const razorpaySignature = headers['x-razorpay-signature'];
+
+            console.log("razorpaySignature",razorpaySignature);
+
+            if(!razorpaySignature){
+                throw new Error('x-razorpa-signature is not being set in the headers');
+            }
+
+            if(freshSignature===razorpaySignature){
+                res.status(200).json({
+                    status: "success",
+                    message:"ok"
+                })
+            }
+        }catch(error){
+            res.status(500).json({
+                status: "failure",
+                message:"Internal server error"
+            });
+
+        }
+
+      }
+
     app.post("/login",loginController);
     app.post("/signup", signUpController);
     app.get("/getUser", protectRouteMiddleware, getUserProfile);
@@ -361,6 +402,7 @@ const signUpController = async(req, res,next) => {
     app.patch("/resetPassword/:userId", resetPassword);
     app.get("/getAllUsers",protectRouteMiddleware,isAuthorizedMiddleware(['admin']), getAllUsers);
     app.post('/checkout', checkoutController)
+    app.post('/verification', paymentVerificationController);
 
     app.use((err,res)=> {
     const statusCode = err.statusCode || 500;

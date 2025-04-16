@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
 const shortid = require('shortid');
 const crypto = require('crypto');
+const cors = require('cors');
 
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require ('./routes/productRoutes');
@@ -35,11 +36,13 @@ const app = express();
 
 app.use(cookieParser());
 
+
 mongoose.connect(dbURL).then((connection)=>{
      console.log('db is connected');
 });
 
 app.use(express.json());
+app.use(cors());
 
 app.use('/api/users',userRoutes);
 app.use('/api/products',productRoutes);

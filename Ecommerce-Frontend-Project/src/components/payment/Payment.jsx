@@ -1,9 +1,65 @@
 // src/Payment/Payment.js
 import React, { useState } from 'react';
 import './Payment.css'; // Import the CSS file
+import Axios from 'axios';
 
 const Payment = () => {
     const [loading, setLoading] = useState(false);
+
+    const loadScript =()=>{
+        return new Promise((resolve,reject)=>{
+            const script = document.createElement('script');
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+
+
+            script.onload = resolve;
+            script.onerror = reject;Payment
+            document.body.appendChild(script);
+        });
+    }
+
+    const displayRazorpay = async() =>{
+        await loadScript();
+
+        const resp = await Axios.post('http://localhost:3000/checkout',{method:'post'});
+
+        console.log(resp.data); 
+
+        const {id, amount, currency} = resp.data.order;
+        console.log("amount",amount)
+        let options = {
+            "key": "rzp_test_Tg4xwjyIeud4A6", // Enter the Key ID generated from the Dashboard
+            "amount": amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": currency,
+            "name": "Acme Corp",
+            "description": "Test Transaction",
+            "image": "https://example.com/your_logo",
+            "order_id": id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+            "handler": function (response){
+                alert(response.razorpay_payment_id);
+                alert(response.razorpay_order_id);
+                alert(response.razorpay_signature)
+            },
+            "prefill": {
+                "name": "Sadhana Venkatesh",
+                "email": "sadhana.v1989@gmail.com",
+                "contact": "9900098662"
+            },
+            "notes": {
+                "address": "Razorpay Corporate Office"
+            },
+            "theme": {
+                "color": "#3399cc"
+            }
+        };
+
+        const razorpayInst = new Razorpay(options);
+
+        razorpayInst.open();
+
+    }
+
+    
 
     const handleMockPayment = () => {
         setLoading(true);
@@ -35,6 +91,7 @@ const Payment = () => {
                     </div>
                 </div>
             </div>
+            <button id="rzp-button1" onClick={displayRazorpay}>Pay with Razorpay</button>
             <button className="pay-button" onClick={handleMockPayment} disabled={loading}>
                 {loading ? 'Processing...' : 'Pay Now'}
             </button>

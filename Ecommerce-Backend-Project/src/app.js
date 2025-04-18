@@ -21,6 +21,8 @@ const sendEmailHelper = require('./email/dynamicEmailSender');
 const SECRET_KEY = "ABCD0987";
 
 const dotenv = require('dotenv');
+const BookingModel = require('./models/bookingModel');
+const { getProductById } = require('./controllers/productController');
 
 dotenv.config();
 
@@ -46,6 +48,7 @@ app.use(cors());
 
 app.use('/api/users',userRoutes);
 app.use('/api/products',productRoutes);
+// app.use('/api/booking',bookingRoutes);
 
 app.use('/search',(req,res)=>{
     console.log(req.query);
@@ -398,6 +401,43 @@ const signUpController = async(req, res,next) => {
 
       }
 
+      
+
+    const confirmBookingController = async (req, res) => {
+        try {
+          const { productId, PriceAtThatTime, orderId } = req.body;
+      
+          if (!productId || !PriceAtThatTime) {
+            return res.status(400).json({
+              status: "failure",
+              message: "Missing productId or PriceAtThatTime",
+            });
+          }
+      
+          const booking = await BookingModel.create({
+            product: productId,
+            PriceAtThatTime,
+            status: "success", // must match enum
+            orderId,
+          });
+      
+          res.status(200).json({
+            status: "success",
+            message: "Booking confirmed",
+            booking,
+          });
+        } catch (err) {
+          console.error("Error in confirmBookingController:", err);
+          res.status(500).json({
+            status: "failure",
+            message: "Error confirming booking",
+          });
+        }
+      };
+      
+      
+    
+
     app.post("/login",loginController);
     app.post("/signup", signUpController);
     app.get("/getUser", protectRouteMiddleware, getUserProfile);
@@ -406,6 +446,8 @@ const signUpController = async(req, res,next) => {
     app.get("/getAllUsers",protectRouteMiddleware,isAuthorizedMiddleware(['admin']), getAllUsers);
     app.post('/checkout', checkoutController)
     app.post('/verification', paymentVerificationController);
+    app.post('/api/bookings/confirm', protectRouteMiddleware, confirmBookingController);
+
 
     app.use((err,res)=> {
     const statusCode = err.statusCode || 500;

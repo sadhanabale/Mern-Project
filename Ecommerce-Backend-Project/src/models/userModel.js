@@ -43,7 +43,11 @@ const userSchemaObj = {
     role:{
         type:String,
         default:"user"
-    }
+    },
+    bookings: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "BookingModel"
+      }]
 
 };
 

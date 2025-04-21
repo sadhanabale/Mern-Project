@@ -67,8 +67,6 @@ const getByIdFactory = (Model) => {
 const checkInput = (req, res, next) => {
     const input = req.body;
 
-    console.log(input);
-
     const isEmpty = Object.keys(input).length === 0;
 
     if(isEmpty) {

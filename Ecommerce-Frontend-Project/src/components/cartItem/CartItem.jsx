@@ -24,3 +24,4 @@ const CartItem = ({ cartData }) => {
 };
 
 export default CartItem;
+

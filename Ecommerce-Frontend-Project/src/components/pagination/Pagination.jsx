@@ -1,7 +1,6 @@
 import './pagination.css';
 
 const Pagination = ({totalPages, currentPage, paginate}) =>{
-    console.log(totalPages);
     return (
         <>
           <div className="page-container">

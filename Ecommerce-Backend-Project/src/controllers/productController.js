@@ -40,78 +40,140 @@ const transfomedQueryHelper = (myQuery) => {
     return parseQuery;
 }
 
+// const getProductHandler = async(req, res) => {
+//     try {
+//         const query = req.query;
+
+//         const sortParams = query.sort;
+//         const selectParams = query.select;
+//         const page = query.page || 1;
+//         const limit = query.limit || 3;
+//         const skip = (page - 1) * limit;
+
+//         const filterParams = query.filter;
+
+
+//         console.log(sortParams);
+//         console.log(selectParams);
+//         console.log(filterParams);
+
+//         //1. Basic filtering - > can be done in find() or findByID() methods based params
+
+//         //let queryResponsePromise = productModel.find({name: "Camera"});
+
+
+//         //2. using query params and can also mongodb operators
+
+//         //let queryResponsePromise = productModel.find({price: {$lt: 60}});
+
+//         // 3. purely via mongoose methods
+//         //let queryResponsePromise = productModel.find().where('price').gt(60);
+
+//         let queryResponsePromise = null;
+
+//         if(filterParams) {
+//             const filterObj = transfomedQueryHelper(filterParams)
+//             queryResponsePromise = productModel.find(filterObj);
+//         } else {
+//             queryResponsePromise = productModel.find();
+//         }
+
+        
+
+//         // Sorting
+//         if(sortParams) {
+//             const [sortParam, order] = sortParams.split(" ");
+//             console.log(`Sorting by ${sortParam} in ${order} order`);
+//             if(order === 'asc'){
+//                 queryResponsePromise = queryResponsePromise.sort(sortParam);
+//             } else{
+//                 queryResponsePromise = queryResponsePromise.sort({ [sortParam]: order === 'asc' ? 1 : -1 });
+
+//             }
+//         }
+
+//         // Selecting the particular fields data from mongodb
+//         if(selectParams) {
+//             queryResponsePromise = queryResponsePromise.select(selectParams);
+//         }
+
+//         //pagination
+//         queryResponsePromise = queryResponsePromise.skip(skip).limit(limit);
+
+
+//         const result = await queryResponsePromise;
+
+//         res.status(200).json({
+//             message:"Get products successfully",
+//             data: result
+//         })
+
+//     } catch (error) {
+//         res.status(500).json({message: 'Internal Server Error'});
+//     }
+// }
+
 const getProductHandler = async(req, res) => {
     try {
         const query = req.query;
 
         const sortParams = query.sort;
         const selectParams = query.select;
-        const page = query.page || 1;
-        const limit = query.limit || 3;
+        const page = parseInt(query.page) || 1;
+        const limit = parseInt(query.limit) || 3;
         const skip = (page - 1) * limit;
-
         const filterParams = query.filter;
+        const category = query.category;
 
+        let filterObj = {};
 
-        console.log(sortParams);
-        console.log(selectParams);
-        console.log(filterParams);
-
-        //1. Basic filtering - > can be done in find() or findByID() methods based params
-
-        //let queryResponsePromise = productModel.find({name: "Camera"});
-
-
-        //2. using query params and can also mongodb operators
-
-        //let queryResponsePromise = productModel.find({price: {$lt: 60}});
-
-        // 3. purely via mongoose methods
-        //let queryResponsePromise = productModel.find().where('price').gt(60);
-
-        let queryResponsePromise = null;
-
-        if(filterParams) {
-            const filterObj = transfomedQueryHelper(filterParams)
-            queryResponsePromise = productModel.find(filterObj);
-        } else {
-            queryResponsePromise = productModel.find();
+        // Handle filter from query string
+        if (filterParams) {
+            filterObj = transfomedQueryHelper(filterParams);
         }
 
-        
+        // Add category-based filtering
+        if (category) {
+            filterObj.category = category;
+        }
+
+        // Count total matching products for pagination metadata
+        const totalProducts = await productModel.countDocuments(filterObj);
+
+        // Build query
+        let queryResponsePromise = productModel.find(filterObj);
 
         // Sorting
-        if(sortParams) {
+        if (sortParams) {
             const [sortParam, order] = sortParams.split(" ");
-            console.log(`Sorting by ${sortParam} in ${order} order`);
-            if(order === 'asc'){
-                queryResponsePromise = queryResponsePromise.sort(sortParam);
-            } else{
-                queryResponsePromise = queryResponsePromise.sort({ [sortParam]: order === 'asc' ? 1 : -1 });
-
-            }
+            queryResponsePromise = queryResponsePromise.sort({
+                [sortParam]: order === 'asc' ? 1 : -1
+            });
         }
 
-        // Selecting the particular fields data from mongodb
-        if(selectParams) {
+        // Selecting fields
+        if (selectParams) {
             queryResponsePromise = queryResponsePromise.select(selectParams);
         }
 
-        //pagination
+        // Pagination
         queryResponsePromise = queryResponsePromise.skip(skip).limit(limit);
-
 
         const result = await queryResponsePromise;
 
         res.status(200).json({
-            message:"Get products successfully",
-            data: result
-        })
+            message: "Get products successfully",
+            data: result,
+            totalPages: Math.ceil(totalProducts / limit),
+            currentPage: page
+        });
 
     } catch (error) {
-        res.status(500).json({message: 'Internal Server Error'});
+        console.log(error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 }
+
 
 const getTop5Products = async(req, res, next) => {
     req.query.filter = {

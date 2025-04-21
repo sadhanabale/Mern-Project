@@ -70,4 +70,12 @@
 
 .pay-button:hover:not(:disabled) {
     background-color: #ecfc8d;
+    color: black
 }
+.payment-info p {
+    font-size: 16px;
+    color: #444;
+    line-height: 1.5;
+    margin-top: 10px;
+}
+

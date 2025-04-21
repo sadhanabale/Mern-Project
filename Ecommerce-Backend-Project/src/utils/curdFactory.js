@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const createFactory = (Model) => {
     return async(req, res, next) => {
         try {
-            const elementModel = await Model.create(req.body);
+            const elementModel = await Model.insertMany(req.body);
 
             if(!elementModel) {
                 res.status(404).json({message: 'Data not found'});

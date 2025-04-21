@@ -28,8 +28,6 @@ dotenv.config();
 
 const {PRIVATE_KEY,PUBLIC_KEY,WEBHOOK_SECRET} = process.env;
 
-// console.log(SECRET_KEY);
-
 const DB_USER = "ashwin_db";
 const DB_PASSWORD = "ygli3axrxF8nvC0G";
 const dbURL = `mongodb+srv://${DB_USER}:${DB_PASSWORD}@cluster0.psoci.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -51,7 +49,6 @@ app.use('/api/products',productRoutes);
 // app.use('/api/booking',bookingRoutes);
 
 app.use('/search',(req,res)=>{
-    console.log(req.query);
     res.status(200).json({
         message:"search successful",
         data:req.query
@@ -62,7 +59,6 @@ app.use('/search',(req,res)=>{
 const signUpController = async(req, res,next) => {
 
     const userObj = req.body;
-   console.log(userObj);
     try{
         if(userObj){
             let newUser = await UserModel.create(userObj);
@@ -80,7 +76,6 @@ const signUpController = async(req, res,next) => {
     const payload = {user:"sadhana venkatesh"};
 
     const loginController = async(req,res,next)=>{
-        console.log("loginController called");
         const {email,password} = req.body;
 
         const user = await UserModel.findOne({email});
@@ -97,14 +92,12 @@ const signUpController = async(req, res,next) => {
         try{
             if(isPasswordSame){
                 try {
-                        console.log("here we")
                         if (!payload) {
                             return res.status(400).json({ message: "Payload is required" });
                         }
 
                         jwt.sign({id: user["_id"]}, SECRET_KEY, { algorithm: "HS256" }, (err, token) => {
                             if (err) {
-                                console.log(err);
                                 return res.status(500).json({ message: "Error generating token" });
                             }
 
@@ -140,7 +133,6 @@ const signUpController = async(req, res,next) => {
     });
 
     const protectRouteMiddleware = (req, res, next) => {
-        console.log("protectRouteMiddleware called");
         try {
             const token = req.cookies.jwt; // Use a different variable name to avoid conflict with the jwt module
             if (!token) {
@@ -173,7 +165,6 @@ const signUpController = async(req, res,next) => {
 
 
     const getUserProfile = async(req,res)=>{
-        console.log("getUserProfile called");
         const id = req.userId;
         const userDetails = await UserModel.findById(id);
         const {name, email} = userDetails;
@@ -201,7 +192,6 @@ const signUpController = async(req, res,next) => {
             }
 
             const otp = otpGenerator();
-            console.log("Generated OTP:", otp);
 
 
             await sendEmailHelper(otp, user.name,email);
@@ -235,11 +225,6 @@ const signUpController = async(req, res,next) => {
               message: "User not found",
             });
           }
-
-          console.log("user",user);
-      
-          console.log("DB OTP:", user.otp);
-          console.log("Received OTP:", otp);
       
           if (!otp || otp !== user.otp) {
             return res.status(400).json({
@@ -284,7 +269,6 @@ const signUpController = async(req, res,next) => {
 
       const isAuthorizedMiddleware = (allowedUser)=>{
 
-        console.log("allowedUser",allowedUser);
         return async(req,res,next)=>{
             try{
 
@@ -292,7 +276,6 @@ const signUpController = async(req, res,next) => {
 
                 const user = await UserModel.findById(id);
 
-                console.log("user role",user.role);
 
                 const isAuthorized = allowedUser.includes(user.role);
 
@@ -343,8 +326,6 @@ const signUpController = async(req, res,next) => {
               });
             }
       
-            console.log("Created order:", order);
-      
             return res.status(200).json({
               status: "success",
               message: "Order created successfully",
@@ -370,16 +351,10 @@ const signUpController = async(req, res,next) => {
 
             const { body,headers} = req;
 
-            console.log(body);
-            console.log(headers);
-
             const freshSignature = crypto.createHmac('sha256',WEBHOOK_SECRET).update(JSON.stringify(body)).digest('hex');
-            console.log(freshSignature);
             
 
             const razorpaySignature = headers['x-razorpay-signature'];
-
-            console.log("razorpaySignature",razorpaySignature);
 
             if(!razorpaySignature){
                 throw new Error('x-razorpa-signature is not being set in the headers');

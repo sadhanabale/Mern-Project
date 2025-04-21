@@ -25,21 +25,16 @@ function Login() {
                password,
             };
 
-            console.log(userDetails);
-
             const resp = await axios.post(urlConfig.LOGIN_URL, userDetails);
             const data = resp.data;
-            console.log(setAuth);
 
             if(data.status === "success") {
                 setEmail("");
                 setPassword("");
                 navigate('/');
-                console.log(data);
                 setAuth(data);
             }
         }catch(err){
-            console.log(err.message);
             setErrMsg("User is not loggedin successfully!");
             setTimeout(()=>{
                 setErrMsg("");

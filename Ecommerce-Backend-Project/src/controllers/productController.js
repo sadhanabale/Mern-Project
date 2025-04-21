@@ -10,7 +10,6 @@ const {
 
 const transfomedQueryHelper = (myQuery) => {
     const parseQuery = JSON.parse(myQuery);
-    console.log(parseQuery);
 
     const queryOperators = {
         gt: '$gt',
@@ -39,79 +38,6 @@ const transfomedQueryHelper = (myQuery) => {
 
     return parseQuery;
 }
-
-// const getProductHandler = async(req, res) => {
-//     try {
-//         const query = req.query;
-
-//         const sortParams = query.sort;
-//         const selectParams = query.select;
-//         const page = query.page || 1;
-//         const limit = query.limit || 3;
-//         const skip = (page - 1) * limit;
-
-//         const filterParams = query.filter;
-
-
-//         console.log(sortParams);
-//         console.log(selectParams);
-//         console.log(filterParams);
-
-//         //1. Basic filtering - > can be done in find() or findByID() methods based params
-
-//         //let queryResponsePromise = productModel.find({name: "Camera"});
-
-
-//         //2. using query params and can also mongodb operators
-
-//         //let queryResponsePromise = productModel.find({price: {$lt: 60}});
-
-//         // 3. purely via mongoose methods
-//         //let queryResponsePromise = productModel.find().where('price').gt(60);
-
-//         let queryResponsePromise = null;
-
-//         if(filterParams) {
-//             const filterObj = transfomedQueryHelper(filterParams)
-//             queryResponsePromise = productModel.find(filterObj);
-//         } else {
-//             queryResponsePromise = productModel.find();
-//         }
-
-        
-
-//         // Sorting
-//         if(sortParams) {
-//             const [sortParam, order] = sortParams.split(" ");
-//             console.log(`Sorting by ${sortParam} in ${order} order`);
-//             if(order === 'asc'){
-//                 queryResponsePromise = queryResponsePromise.sort(sortParam);
-//             } else{
-//                 queryResponsePromise = queryResponsePromise.sort({ [sortParam]: order === 'asc' ? 1 : -1 });
-
-//             }
-//         }
-
-//         // Selecting the particular fields data from mongodb
-//         if(selectParams) {
-//             queryResponsePromise = queryResponsePromise.select(selectParams);
-//         }
-
-//         //pagination
-//         queryResponsePromise = queryResponsePromise.skip(skip).limit(limit);
-
-
-//         const result = await queryResponsePromise;
-
-//         res.status(200).json({
-//             message:"Get products successfully",
-//             data: result
-//         })
-
-//     } catch (error) {
-//         res.status(500).json({message: 'Internal Server Error'});
-//     }
-// }
 
 const getProductHandler = async(req, res) => {
     try {
@@ -169,7 +95,6 @@ const getProductHandler = async(req, res) => {
         });
 
     } catch (error) {
-        console.log(error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 }

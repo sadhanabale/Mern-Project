@@ -1,4 +1,3 @@
-
 import { useCart } from "../../context/cart/useCart";
 import "./addToCart.css";
 
@@ -8,8 +7,6 @@ const AddToCart = ({product}) => {
 
   const itemInCart = cart[product.id];
   const quantity = itemInCart ? itemInCart.quantity : 0;
-
-  console.log(cart);
   return (
     <div className="add-to-cart">
       {
@@ -34,3 +31,8 @@ const AddToCart = ({product}) => {
 }
 
 export default AddToCart;
+
+
+
+
+

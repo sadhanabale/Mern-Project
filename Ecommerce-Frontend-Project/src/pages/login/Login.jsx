@@ -69,7 +69,7 @@ function Login() {
                         <p>Sign In</p>
                     </div>
 
-                    <label for="email">Email</label>
+                    <label htmlFor="email">Email</label>
                     <input
                         type="email"
                         id="lname"
@@ -78,7 +78,7 @@ function Login() {
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                     />
-                    <label for="password">Password</label>
+                    <label htmlFor="password">Password</label>
                     <input
                         type="password"
                         id="lname"

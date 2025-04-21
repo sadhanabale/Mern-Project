@@ -65,12 +65,12 @@ function Signup() {
                         }}
                     >
                         <div >
-                            <i class="fas fa-arrow-circle-left fa-5x"></i>
+                            <i className="fas fa-arrow-circle-left fa-5x"></i>
                         </div>
                         <p>Signup</p>
                     </div>
 
-                    <label for="name">Name</label>
+                    <label htmlFor="name">Name</label>
                     <input
                         type="text"
                         id="name"
@@ -80,7 +80,7 @@ function Signup() {
                         onChange={e => setName(e.target.value)}
                     />
 
-                    <label for="email">Email</label>
+                    <label htmlFor="email">Email</label>
                     <input
                         type="email"
 
@@ -89,7 +89,7 @@ function Signup() {
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                     />
-                    <label for="password">Password</label>
+                    <label htmlFor="password">Password</label>
                     <input
                         type="password"
                         name="password"
@@ -97,7 +97,7 @@ function Signup() {
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                     />
-                    <label for="password">Confirm Password</label>
+                    <label htmlFor="password">Confirm Password</label>
                     <input
                         type="password"
                         id="password"

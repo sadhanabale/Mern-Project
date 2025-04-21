@@ -4,7 +4,7 @@ const productSchema = new mongoose.Schema({
     title:{
         type: String,
         required: [true, 'Product title is required'],
-        unique: [true, "Product title is unique"],
+        unique: [false, "Product title is unique"],
         maxlength: [100, 'Product name should be less than 100 characters']
     },
     price: {
@@ -47,7 +47,7 @@ const productSchema = new mongoose.Schema({
 
     stock:{
         type: Number,
-        required: [true, "Please provide the stock"],
+        required: [false, "Please provide the stock"],
         validate:{
             validator: function(){
                 return this.stock >= 0
@@ -55,21 +55,28 @@ const productSchema = new mongoose.Schema({
             message: "Stock should be greater than 0"
         }
     },
+    // rating: {
+    //     rate: {
+    //         type: Number,
+    //         required: true
+    //     },
+    //     count: {
+    //         type: Number,
+    //         required: true
+    //     }
+    // },
     rating: {
-        rate: {
-            type: Number,
-            required: true
+        type: {
+            rate: { type: Number, required: true },
+            count: { type: Number, required: true }
         },
-        count: {
-            type: Number,
-            required: true
-        }
+        required: true
     },
     
-    createdAt: {
-        type: Date,
-        default: Date.now()
-    }
+    // createdAt: {
+    //     type: Date,
+    //     default: Date.now()
+    // }
 });
 
 const productModel = new mongoose.model('productModel', productSchema);

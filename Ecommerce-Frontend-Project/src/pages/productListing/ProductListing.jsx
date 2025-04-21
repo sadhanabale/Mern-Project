@@ -1,56 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import useFetchData from '../../hooks/useFetchData';
 import Product from '../../components/product/product';
 import Loader from '../../components/loader';
-
+import urlConfig from '../../utils/urlConfig';
 import './productListing.css';
 import Pagination from '../../components/pagination/Pagination';
 
 const ProductListing = () => {
+  const { categoryName } = useParams();
+  const itemsPerPage = 3;
+  const [currentPage, setCurrentPage] = useState(1);
 
-    const { categoryName } = useParams();
+  // Generate API URL with page and limit params
+  const url = categoryName
+    ? `${urlConfig.ALL_PRODUCT_URL}?category=${categoryName}&page=${currentPage}&limit=${itemsPerPage}`
+    : `${urlConfig.ALL_PRODUCT_URL}?page=${currentPage}&limit=${itemsPerPage}`;
 
-    const url = categoryName
-    ? `https://fakestoreapi.com/products/category/${categoryName}`
-    : `https://fakestoreapi.com/products`;
+  const { data, error, isLoading } = useFetchData(url, { data: [], totalPages: 1 });
+  
+  const products = Array.isArray(data.data) ? data.data : [];
+  const totalPages = data.totalPages || 1;
 
-    const {data: products, error, isLoading} = useFetchData(url, []);
-    console.log(products);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    const itemsPerPage = 3;
-    const [currentPage, setCurrentPage] = useState(1);
-
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexofFirstItem = indexOfLastItem - itemsPerPage;
-    const currentProducts = products.slice(indexofFirstItem, indexOfLastItem);
-
-    const totalPages = Math.ceil(products.length/itemsPerPage);
-
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    return (
-        <div className="container">
-            {
-                isLoading ? (
-                    <Loader />
-                ): (
-                    <>
-                        <div className="product-list">
-                            {
-                                currentProducts && currentProducts.map((product)=>{
-                                    return <Product key={product.id} product={product}/>   
-                                })
-                            }
-                        </div>
-                        <Pagination totalPages={totalPages} currentPage={currentPage} paginate={paginate}/>
-                    </>
-                )
-            }
-        </div>
-    )
-
-}
+  return (
+    <div className="container">
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <>
+          <div className="product-list">
+            {products.map((product) => (
+              <Product key={product._id || product.id} product={product} />
+            ))}
+          </div>
+          <Pagination
+            totalPages={totalPages}
+            currentPage={currentPage}
+            paginate={paginate}
+          />
+        </>
+      )}
+    </div>
+  );
+};
 
 export default ProductListing;
+
+
+
+
 

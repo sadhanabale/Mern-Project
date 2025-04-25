@@ -76,7 +76,7 @@ function Login() {
                     <label htmlFor="password">Password</label>
                     <input
                         type="password"
-                        id="lname"
+                        id="pass"
                         name="password"
                         placeholder="Your Password.."
                         value={password}

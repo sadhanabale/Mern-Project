@@ -43,6 +43,28 @@ const getUserById = async(req, res) =>{
     }
 }
 
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await UserModel.find();
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+ const getUserProfile = async(req,res)=>{
+        const id = req.userId;
+        const userDetails = await UserModel.findById(id);
+        const {name, email} = userDetails;
+        res.status(200).json({
+            status:"success",
+            message:"User Data Retrieved Successfully",
+            user:{
+                name,
+                email
+            }
+        })
+    }
+
 const updateUser = async(req, res) =>{
 
     const { id } = req.params;
@@ -89,6 +111,8 @@ module.exports = {
     createUser,
     getUsers,
     getUserById,
+    getAllUsers,
+    getUserProfile,
     updateUser,
     deleteUser
 }

@@ -1,5 +1,5 @@
 
-const { MongoClient, ServerApiVersion } = require('mongodb'); // check this if needed
+const { MongoClient, ServerApiVersion } = require('mongodb'); 
 const mongoose = require('mongoose');
 const express = require('express');
 const cookieParser = require('cookie-parser');
@@ -12,17 +12,24 @@ const cors = require('cors');
 
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require ('./routes/productRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
 
 const UserModel = require('./models/userModel');
 const otpGenerator = require('./utils/otpGenerator');
 const otpEmailTemplate = require('./email/dynamicEmailSender');
 const sendEmailHelper = require('./email/dynamicEmailSender');
 
+
 const SECRET_KEY = "ABCD0987";
 
 const dotenv = require('dotenv');
 const BookingModel = require('./models/bookingModel');
 const { getProductById } = require('./controllers/productController');
+const { getAllUsers } = require('./controllers/userController');
+const userController = require('./controllers/userController');
+const authController = require('./controllers/authController');
+const checkoutController = require('./controllers/checkoutController');
+
 
 dotenv.config();
 
@@ -46,7 +53,7 @@ app.use(cors());
 
 app.use('/api/users',userRoutes);
 app.use('/api/products',productRoutes);
-// app.use('/api/booking',bookingRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 app.use('/search',(req,res)=>{
     res.status(200).json({
@@ -55,374 +62,17 @@ app.use('/search',(req,res)=>{
     })
 });
 
-
-const signUpController = async(req, res,next) => {
-
-    const userObj = req.body;
-    try{
-        if(userObj){
-            let newUser = await UserModel.create(userObj);
-    
-            res.status(200).json({
-                status:"Success",
-                message:"User has been created successfuly"
-            });
-        }
-    }catch(error){
-      next(error);
-    }
-  
-}
-    const payload = {user:"sadhana venkatesh"};
-
-    const loginController = async(req,res,next)=>{
-        const {email,password} = req.body;
-
-        const user = await UserModel.findOne({email});
-
-        if(!user){
-            res.status(404).json({
-                status:"failure",
-                message:"User not found"
-            })
-        }
-
-        const isPasswordSame = password===user.password;
-
-        try{
-            if(isPasswordSame){
-                try {
-                        if (!payload) {
-                            return res.status(400).json({ message: "Payload is required" });
-                        }
-
-                        jwt.sign({id: user["_id"]}, SECRET_KEY, { algorithm: "HS256" }, (err, token) => {
-                            if (err) {
-                                return res.status(500).json({ message: "Error generating token" });
-                            }
-
-                            console.log("token",token);
-
-                            res.cookie("jwt", token, {
-                                maxAge: 30 * 60 * 1000,
-                                httpOnly: true
-                            });
-                            res.status(200).json({ 
-                                status:"success",
-                                message: "Signup successful",
-                             });
-                        });
-                    } catch (error) {
-                        res.status(500).json({
-                            status:"failure",
-                             message: "Invalid credentials" });
-                    }
-            }
-
-         } catch(error) {
-            next(error)
-
-        }
-    }
-
-    app.get('/logout',(req,res)=>{
-        res.clearCookie('token');
-        res.status(200).json({
-            message:"user logged out successfully"
-        })
-    });
-
-    const protectRouteMiddleware = (req, res, next) => {
-        try {
-            const token = req.cookies.jwt; // Use a different variable name to avoid conflict with the jwt module
-            if (!token) {
-                return res.status(401).json({
-                    status: "failure",
-                    message: "No token provided"
-                });
-            }
-    
-            // Now you can safely use jwt.verify
-            const decodedToken = jwt.verify(token, SECRET_KEY);
-    
-            if (decodedToken) {
-                const userId = decodedToken.id;
-                req.userId = userId;
-                return next(); // Proceed to the next middleware
-            } else {
-                return res.status(401).json({
-                    status: "failure",
-                    message: "Invalid or expired token"
-                });
-            }
-        } catch (error) {
-            return res.status(500).json({
-                status: "failure",
-                message: "Error verifying token"
-            });
-        }
-    };
-
-
-    const getUserProfile = async(req,res)=>{
-        const id = req.userId;
-        const userDetails = await UserModel.findById(id);
-        const {name, email} = userDetails;
-        res.status(200).json({
-            status:"success",
-            message:"User Data Retrieved Successfully",
-            user:{
-                name,
-                email
-            }
-        })
-    }
-
-    const forgotPassword = async(req,res,next)=>{
-        try{
-
-            const {email} = req.body;
-            const user = await UserModel.findOne({email});
-
-            if(!user){
-                return res.status(404).json({
-                    status:"failure",
-                    message:"User not found"
-                })
-            }
-
-            const otp = otpGenerator();
-
-
-            await sendEmailHelper(otp, user.name,email);
-
-            user.otp = otp;
-            user.otpExpiry = Date.now()+ 5*60*1000;
-
-            await user.save();
-
-            return res.status(200).json({
-                status:"success",
-                message:"otp has been sent successfully to your email",
-                otp:otp,
-                userId:user.id
-            })
-        }
-        catch(error){
-            next(error)
-        }
-    }
-
-    const resetPassword = async (req, res, next) => {
-        try {
-          const userId = req.params.userId;
-          const { otp, password, confirmPassword } = req.body;
-      
-          const user = await UserModel.findById(userId);
-          if (!user) {
-            return res.status(404).json({
-              status: "failure",
-              message: "User not found",
-            });
-          }
-      
-          if (!otp || otp !== user.otp) {
-            return res.status(400).json({
-              status: "failure",
-              message: "Invalid OTP",
-            });
-          }
-      
-          const currentTime = Date.now();
-          if (currentTime > user.otpExpiry) {
-            return res.status(400).json({
-              status: "failure",
-              message: "OTP expired",
-            });
-          }
-      
-          user.password = password;
-          user.confirmPassword = confirmPassword;
-          user.otp = undefined;
-          user.otpExpiry = undefined;
-      
-          await user.save();
-      
-          return res.status(200).json({
-            status: "success",
-            message: "Password has been updated successfully",
-          });
-        } catch (error) {
-          next(error);
-        }
-      };
-
-      const isAdminMiddleware = (req,res,next)=>{
-            try{
-
-            }catch(error){
-
-            }
-      }
-
       const validUsers = ["user","admin","seller"];
-
-      const isAuthorizedMiddleware = (allowedUser)=>{
-
-        return async(req,res,next)=>{
-            try{
-
-                let id = req.userId;
-
-                const user = await UserModel.findById(id);
-
-
-                const isAuthorized = allowedUser.includes(user.role);
-
-                if(isAuthorized){
-                    next();
-                }else{
-                    res.status(401).json({
-                        status:"failure",
-                        message:"You are not authorized user"
-                    });
-                }
-
-            }catch(error){
-                next(error);
-            }
-        }
-  }
-
-      const getAllUsers = async(req, res) => {
-        try {
-            const users = await UserModel.find();
-            res.status(200).json(users);
-        } catch (error) {
-             res.status(500).json({message: 'Internal Server Error'});
-        }
-    }
-      
-    const checkoutController = (req, res) => {
-        try {
-          let razorpayInstance = new Razorpay({
-            key_id: PUBLIC_KEY,
-            key_secret: PRIVATE_KEY
-          });
-      
-          let options = {
-            amount: 50000,
-            currency: "INR",
-            receipt: shortid.generate(),
-            payment_capture: 1
-          };
-      
-          razorpayInstance.orders.create(options, function (err, order) {
-            if (err) {
-              console.error("Error creating Razorpay order:", err);
-              return res.status(500).json({
-                status: "failure",
-                message: "Error creating Razorpay order"
-              });
-            }
-      
-            return res.status(200).json({
-              status: "success",
-              message: "Order created successfully",
-              order: order
-            });
-          });
-      
-        } catch (error) {
-          console.error("Exception in checkoutController:", error);
-          res.status(500).json({
-            status: "failure",
-            message: "Internal server error"
-          });
-        }
-      }
-
-
-      const paymentVerificationController = (req,res,next) =>{
-        try{
-            if(!WEBHOOK_SECRET){
-                throw new Error("webhook secret key is not defined")
-            }
-
-            const { body,headers} = req;
-
-            const freshSignature = crypto.createHmac('sha256',WEBHOOK_SECRET).update(JSON.stringify(body)).digest('hex');
-            
-
-            const razorpaySignature = headers['x-razorpay-signature'];
-
-            if(!razorpaySignature){
-                throw new Error('x-razorpa-signature is not being set in the headers');
-            }
-
-            if(freshSignature===razorpaySignature){
-                res.status(200).json({
-                    status: "success",
-                    message:"ok"
-                })
-            }
-        }catch(error){
-            res.status(500).json({
-                status: "failure",
-                message:"Internal server error"
-            });
-
-        }
-
-      }
-
-      
-
-    const confirmBookingController = async (req, res) => {
-        try {
-          const { productId, PriceAtThatTime, orderId } = req.body;
-      
-          if (!productId || !PriceAtThatTime) {
-            return res.status(400).json({
-              status: "failure",
-              message: "Missing productId or PriceAtThatTime",
-            });
-          }
-      
-          const booking = await BookingModel.create({
-            product: productId,
-            PriceAtThatTime,
-            status: "success", // must match enum
-            orderId,
-          });
-      
-          res.status(200).json({
-            status: "success",
-            message: "Booking confirmed",
-            booking,
-          });
-        } catch (err) {
-          console.error("Error in confirmBookingController:", err);
-          res.status(500).json({
-            status: "failure",
-            message: "Error confirming booking",
-          });
-        }
-      };
-      
-      
     
 
-    app.post("/login",loginController);
-    app.post("/signup", signUpController);
-    app.get("/getUser", protectRouteMiddleware, getUserProfile);
-    app.patch("/forgotPassword", forgotPassword);
-    app.patch("/resetPassword/:userId", resetPassword);
-    app.get("/getAllUsers",protectRouteMiddleware,isAuthorizedMiddleware(['admin']), getAllUsers);
-    app.post('/checkout', checkoutController)
-    app.post('/verification', paymentVerificationController);
-    app.post('/api/bookings/confirm', protectRouteMiddleware, confirmBookingController);
-
+    app.post("/login", authController.loginController);
+    app.post("/signup", authController.signUpController);
+    app.patch("/forgotPassword", authController.forgotPassword);
+    app.patch("/resetPassword/:userId", authController.resetPassword);
+    app.get("/getUser", authController.protectRouteMiddleware, userController.getUserProfile); 
+    app.get("/admin/dashboard", authController.protectRouteMiddleware, authController.isAuthorizedMiddleware(['admin']),getAllUsers);
+    app.post('/checkout', checkoutController.checkoutController);
+    app.post('/verification', express.raw({ type: 'application/json' }), checkoutController.paymentVerificationController);
 
     app.use((err,res)=> {
     const statusCode = err.statusCode || 500;
